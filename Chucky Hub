@@ -22,6 +22,7 @@ end)
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 repeat wait() until game:IsLoaded()
+
 local Window = Fluent:CreateWindow({
     Title = "Chucky Hub",
     SubTitle = "Blox Fruit",
@@ -31,32 +32,34 @@ local Window = Fluent:CreateWindow({
     Theme = "Amethyst",
     MinimizeKey = Enum.KeyCode.End
 })
+
 local Tabs = {
-        Main0=Window:AddTab({ Title="ThĂ´ng Tin" }),
-        Main1=Window:AddTab({ Title="Main Farm" }),
-        Main2=Window:AddTab({ Title="Config" }),
-        Main3=Window:AddTab({ Title="Fighting Style" }),
-        Main4=Window:AddTab({ Title="Item Farm" }),
-        Main5=Window:AddTab({ Title="Sea Event" })
-        Main6=Window:AddTab({ Title="Mirage And RaceV4" })
-        Main7=Window:AddTab({ Title="Dragon Dojo" })
-        Main8=Window:AddTab({ Title="Prehistoric" })
-        Main9=Window:AddTab({ Title="Raid" })
-        Main10=Window:AddTab({ Title="Combat PvP" })
-        Main11=Window:AddTab({ Title="Teleport" })
-        Main12=Window:AddTab({ Title="Fruit" })
-        Main13=Window:AddTab({ Title="Shop" })
-        Main14=Window:AddTab({ Title="Misc" })
-    }
-    
-})
+    Main0 = Window:AddTab({ Title = "Thông Tin" }),
+    Main1 = Window:AddTab({ Title = "Main Farm" }),
+    Main2 = Window:AddTab({ Title = "Config" }),
+    Main3 = Window:AddTab({ Title = "Fighting Style" }),
+    Main4 = Window:AddTab({ Title = "Item Farm" }),
+    Main5 = Window:AddTab({ Title = "Sea Event" }),
+    Main6 = Window:AddTab({ Title = "Mirage And RaceV4" }),
+    Main7 = Window:AddTab({ Title = "Dragon Dojo" }),
+    Main8 = Window:AddTab({ Title = "Prehistoric" }),
+    Main9 = Window:AddTab({ Title = "Raid" }),
+    Main10 = Window:AddTab({ Title = "Combat PvP" }),
+    Main11 = Window:AddTab({ Title = "Teleport" }),
+    Main12 = Window:AddTab({ Title = "Fruit" }),
+    Main13 = Window:AddTab({ Title = "Shop" }),
+    Main14 = Window:AddTab({ Title = "Misc" })
+}
+
 Tabs.Main0:AddButton({
     Title = "Discord",
     Description = "Chucky Community",
     Callback = function()
         setclipboard("https://discord.gg/BYGNsq82bZ")
-end
-    Tabs.Main0:AddButton({
+    end
+})
+
+Tabs.Main0:AddButton({
     Title = "Link Bio",
     Description = "Chucky",
     Callback = function()
