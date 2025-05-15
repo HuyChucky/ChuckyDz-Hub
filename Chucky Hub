@@ -1,3 +1,11 @@
+--!strict
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local LocalPlayer = Players.LocalPlayer
+
+-- GUI Init
 local ScreenGui = Instance.new("ScreenGui")
 local ImageButton = Instance.new("ImageButton")
 local UICorner = Instance.new("UICorner")
@@ -6,63 +14,236 @@ ScreenGui.Parent = game.CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 ImageButton.Parent = ScreenGui
-ImageButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ImageButton.BackgroundColor3 = Color3.new(0, 0, 0)
 ImageButton.BorderSizePixel = 0
-ImageButton.Position = UDim2.new(0.10615778, 0, 0.16217947, 0)
+ImageButton.Position = UDim2.new(0.106, 0, 0.162, 0)
 ImageButton.Size = UDim2.new(0, 40, 0, 40)
 ImageButton.Draggable = true
 ImageButton.Image = "http://www.roblox.com/asset/?id=79697249956251"
 
-UICorner.CornerRadius = UDim.new(1, 10) 
+UICorner.CornerRadius = UDim.new(1, 10)
 UICorner.Parent = ImageButton
 
 ImageButton.MouseButton1Down:Connect(function()
-    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.End, false, game)
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.End, false, game)
 end)
 
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+-- Load Fluent UI
 repeat wait() until game:IsLoaded()
-
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local Window = Fluent:CreateWindow({
     Title = "Chucky Hub",
-    SubTitle = "Blox Fruit",
+    SubTitle = "Blox Fruits",
     TabWidth = 157,
     Size = UDim2.fromOffset(450, 300),
     Acrylic = true,
-    Theme = "Amethyst",
+    Theme = "Dark",
     MinimizeKey = Enum.KeyCode.End
 })
 
 local Tabs = {
-    Main0 = Window:AddTab({ Title = "Thông Tin" }),
-    Main1 = Window:AddTab({ Title = "Main Farm" }),
-    Main2 = Window:AddTab({ Title = "Config" }),
-    Main3 = Window:AddTab({ Title = "Fighting Style" }),
-    Main4 = Window:AddTab({ Title = "Item Farm" }),
-    Main5 = Window:AddTab({ Title = "Sea Event" }),
-    Main6 = Window:AddTab({ Title = "Mirage And RaceV4" }),
-    Main7 = Window:AddTab({ Title = "Dragon Dojo" }),
-    Main8 = Window:AddTab({ Title = "Prehistoric" }),
-    Main9 = Window:AddTab({ Title = "Raid" }),
-    Main10 = Window:AddTab({ Title = "Combat PvP" }),
-    Main11 = Window:AddTab({ Title = "Teleport" }),
-    Main12 = Window:AddTab({ Title = "Fruit" }),
-    Main13 = Window:AddTab({ Title = "Shop" }),
-    Main14 = Window:AddTab({ Title = "Misc" })
+    Info = Window:AddTab({ Title = "Thông Tin" }),
+    Farm = Window:AddTab({ Title = "Main Farm" }),
+    SeaEvent = Window:AddTab({ Title = "Sea Event" }),
+    DragonDojo = Window:AddTab({ Title = "Dragon Dojo" }),
+    Raid = Window:AddTab({ Title = "Raid" }),
+    Bone = Window:AddTab({ Title = "Item Farm" }),
 }
 
-Tabs.Main0:AddButton({
-    Title = "Discord",
-    Description = "Chucky Community",
-    Callback = function()
-        setclipboard("https://discord.gg/BYGNsq82bZ")
-    end
-})
+-- Label trạng thái
+local StatusLabel = Window:CreateLabel("Chucky Hub sẵn sàng!")
 
-Tabs.Main0:AddButton({
-    Title = "Link Bio",
-    Description = "Chucky",
-    Callback = function()
-        setclipboard("https://guns.lol/chuckydz")
+-- Biến toggle lưu toàn cục
+local Toggles = {
+    AutoFarm = false,
+    AutoRaid = false,
+    AutoSeaEvent = false,
+    AutoDojo = false,
+    AutoBone = false,
+}
+
+-- Lưu trạng thái toggle (localStorage kiểu Roblox)
+local HttpService = game:GetService("HttpService")
+local function SaveSettings()
+    local data = HttpService:JSONEncode(Toggles)
+    -- Lưu vào Value trong PlayerGui, hoặc DataStore (nâng cao)
+    if not LocalPlayer:FindFirstChild("ChuckySettings") then
+        local v = Instance.new("StringValue")
+        v.Name = "ChuckySettings"
+        v.Parent = LocalPlayer
     end
-})
+    LocalPlayer.ChuckySettings.Value = data
+end
+
+local function LoadSettings()
+    if LocalPlayer:FindFirstChild("ChuckySettings") then
+        local ok, data = pcall(function()
+            return HttpService:JSONDecode(LocalPlayer.ChuckySettings.Value)
+        end)
+        if ok and data then
+            for k, v in pairs(data) do
+                if Toggles[k] ~= nil then
+                    Toggles[k] = v
+                end
+            end
+        end
+    end
+end
+
+LoadSettings()
+
+-- Auto Farm logic
+local function GetQuestData()
+    local level = LocalPlayer.Data.Level.Value
+    local QuestList = {
+        {Min = 10, Max = 50, QuestName = "MonkeyQuest", MonsterName = "Monkey", QuestPos = Vector3.new(-1600, 10, 145)},
+        {Min = 51, Max = 90, QuestName = "GorillaQuest", MonsterName = "Gorilla", QuestPos = Vector3.new(-1325, 10, 300)},
+    }
+    for _, quest in ipairs(QuestList) do
+        if level >= quest.Min and level <= quest.Max then
+            return quest
+        end
+    end
+    return nil
+end
+
+local function EquipTool()
+    local backpack = LocalPlayer.Backpack
+    for _, item in ipairs(backpack:GetChildren()) do
+        if item:IsA("Tool") then
+            LocalPlayer.Character.Humanoid:EquipTool(item)
+            return
+        end
+    end
+end
+
+local function AttackEnemy(enemy)
+    EquipTool()
+    while enemy and enemy.Parent and enemy.Humanoid.Health > 0 and Toggles.AutoFarm do
+        LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+        -- Bạn nên thay thế phần này bằng remote attack game thật nếu có
+        wait(0.3)
+    end
+end
+
+local function AutoFarm()
+    while Toggles.AutoFarm do
+        local quest = GetQuestData()
+        if quest then
+            StatusLabel:Set("Farm: " .. quest.MonsterName)
+            -- Gửi lệnh nhận quest
+            local Comm = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Comm")
+            local success, err = pcall(function()
+                Comm:InvokeServer("StartQuest", quest.QuestName, 1)
+            end)
+            if not success then
+                warn("Lỗi nhận quest:", err)
+            end
+
+            -- Tìm mob đánh
+            for _, mob in ipairs(workspace.Enemies:GetChildren()) do
+                if mob.Name == quest.MonsterName and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
+                    AttackEnemy(mob)
+                end
+            end
+        else
+            StatusLabel:Set("Không tìm thấy nhiệm vụ phù hợp.")
+        end
+        wait(1)
+    end
+    StatusLabel:Set("Auto Farm đã tắt.")
+end
+
+-- Auto Raid (ví dụ mua chip và bắt đầu)
+local function AutoRaid()
+    local Comm = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Comm")
+    while Toggles.AutoRaid do
+        StatusLabel:Set("Đang Auto Raid...")
+        -- Mua chip nếu chưa có
+        local success, err = pcall(function()
+            Comm:InvokeServer("BuyChip")
+        end)
+        if not success then
+            warn("Lỗi mua chip:", err)
+        end
+
+        -- Vào máy raid (giả lập)
+        local raidMachine = workspace:FindFirstChild("RaidMachine")
+        if raidMachine and raidMachine:FindFirstChild("ClickDetector") then
+            fireclickdetector(raidMachine.ClickDetector)
+        end
+
+        wait(30) -- Chờ kết thúc raid
+    end
+    StatusLabel:Set("Auto Raid đã tắt.")
+end
+
+-- Auto Sea Event (giả lập tự tham gia event)
+local function AutoSeaEvent()
+    while Toggles.AutoSeaEvent do
+        StatusLabel:Set("Tự động tham gia Sea Event...")
+        -- Giả lập tìm event và teleport, hoặc nhấn nút
+        -- Cần code chi tiết game hơn
+        wait(10)
+    end
+    StatusLabel:Set("Sea Event tắt.")
+end
+
+-- Auto Dragon Dojo (giả lập đánh dojo)
+local function AutoDragonDojo()
+    while Toggles.AutoDojo do
+        StatusLabel:Set("Auto Dragon Dojo đang chạy...")
+        -- Giả lập logic đánh dojo
+        wait(5)
+    end
+    StatusLabel:Set("Auto Dragon Dojo đã tắt.")
+end
+
+-- Auto Farm Bone (giả lập farm Bone)
+local function AutoFarmBone()
+    while Toggles.AutoBone do
+        StatusLabel:Set("Auto Farm Bone đang chạy...")
+        -- Giả lập farm Bone
+        wait(3)
+    end
+    StatusLabel:Set("Auto Farm Bone đã tắt.")
+end
+
+-- Gắn toggle UI
+Tabs.Farm:AddToggle("AutoFarm", {Title = "Auto Farm Level", Default = Toggles.AutoFarm}, function(state)
+    Toggles.AutoFarm = state
+    SaveSettings()
+    if state then
+        spawn(AutoFarm)
+    else
+        StatusLabel:Set("Auto Farm tắt.")
+    end
+end)
+
+Tabs.Raid:AddToggle("AutoRaid", {Title = "Auto Raid", Default = Toggles.AutoRaid}, function(state)
+    Toggles.AutoRaid = state
+    SaveSettings()
+    if state then
+        spawn(AutoRaid)
+    else
+        StatusLabel:Set("Auto Raid tắt.")
+    end
+end)
+
+Tabs.SeaEvent:AddToggle("AutoSeaEvent", {Title = "Auto Sea Event", Default = Toggles.AutoSeaEvent}, function(state)
+    Toggles.AutoSeaEvent = state
+    SaveSettings()
+    if state then
+        spawn(AutoSeaEvent)
+    else
+        StatusLabel:Set("Auto Sea Event tắt.")
+    end
+end)
+
+Tabs.DragonDojo:AddToggle("AutoDojo", {Title = "Auto Dragon Dojo", Default = Toggles.AutoDojo}, function(state)
+    Toggles.AutoDojo = state
+    SaveSettings()
+    if state then
+        spawn(AutoDragonDojo)
+    else
+        StatusLabel:Set
