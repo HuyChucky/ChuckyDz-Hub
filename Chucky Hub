@@ -1,113 +1,105 @@
---!strict
--- Khởi tạo cơ bản
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
+if not game:IsLoaded() then game.Loaded:Wait() end
 
-local player = Players.LocalPlayer
-local Comm = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Comm")
+-- GUI Button
+local ScreenGui = Instance.new("ScreenGui")
+local ImageButton = Instance.new("ImageButton")
+local UICorner = Instance.new("UICorner")
 
--- Load Fluent UI (đảm bảo bạn có kết nối mạng)
-repeat wait() until game:IsLoaded()
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+ImageButton.Parent = ScreenGui
+ImageButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ImageButton.BorderSizePixel = 0
+ImageButton.Position = UDim2.new(0.05, 0, 0.2, 0)
+ImageButton.Size = UDim2.new(0, 40, 0, 40)
+ImageButton.Draggable = true
+ImageButton.Image = "http://www.roblox.com/asset/?id=79697249956251"
+
+UICorner.CornerRadius = UDim.new(1, 10)
+UICorner.Parent = ImageButton
+
+ImageButton.MouseButton1Down:Connect(function()
+    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.End, false, game)
+end)
+
+-- Fluent UI Load
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
 local Window = Fluent:CreateWindow({
     Title = "Chucky Hub",
     SubTitle = "Blox Fruits",
-    TabWidth = 157,
-    Size = UDim2.fromOffset(480, 380),
+    TabWidth = 160,
+    Size = UDim2.fromOffset(480, 320),
     Acrylic = true,
-    Theme = "Dark",
+    Theme = "Amethyst",
     MinimizeKey = Enum.KeyCode.End
 })
 
+-- Tabs
 local Tabs = {
-    Main = Window:AddTab({ Title = "Main" })
+    Main0  = Window:AddTab({ Title = "Thông Tin" }),
+    Main1  = Window:AddTab({ Title = "Main Farm" }),
+    Main2  = Window:AddTab({ Title = "Config" }),
+    Main3  = Window:AddTab({ Title = "Fighting Style" }),
+    Main4  = Window:AddTab({ Title = "Item Farm" }),
+    Main5  = Window:AddTab({ Title = "Sea Event" }),
+    Main6  = Window:AddTab({ Title = "Mirage And RaceV4" }),
+    Main7  = Window:AddTab({ Title = "Dragon Dojo" }),
+    Main8  = Window:AddTab({ Title = "Prehistoric" }),
+    Main9  = Window:AddTab({ Title = "Raid" }),
+    Main10 = Window:AddTab({ Title = "Combat PvP" }),
+    Main11 = Window:AddTab({ Title = "Teleport" }),
+    Main12 = Window:AddTab({ Title = "Fruit" }),
+    Main13 = Window:AddTab({ Title = "Shop" }),
+    Main14 = Window:AddTab({ Title = "Misc" })
 }
 
--- Label trạng thái
-local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(1, -20, 0, 30)
-statusLabel.Position = UDim2.new(0, 10, 0, 5)
-statusLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-statusLabel.BorderSizePixel = 0
-statusLabel.TextColor3 = Color3.new(1, 1, 1)
-statusLabel.TextScaled = true
-statusLabel.Text = "Trạng thái: Đang chờ..."
-statusLabel.Parent = Window.Window
-
--- Hàm tween di chuyển
-local function TweenToPosition(targetPos)
-    local char = player.Character
-    if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    local distance = (hrp.Position - targetPos).Magnitude
-    local tweenInfo = TweenInfo.new(distance / 50, Enum.EasingStyle.Linear)
-    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))})
-    tween:Play()
-    tween.Completed:Wait()
-end
-
--- Lưu trạng thái toggle
-local function SaveToggle(name, state)
-    local val = player:FindFirstChild(name)
-    if not val then
-        val = Instance.new("BoolValue")
-        val.Name = name
-        val.Parent = player
+-- Thông tin
+Tabs.Main0:AddButton({
+    Title = "Discord",
+    Description = "Tham gia cộng đồng Chucky",
+    Callback = function()
+        setclipboard("https://discord.gg/BYGNsq82bZ")
+        Fluent:Notify({ Title = "Sao chép!", Content = "Đã copy link Discord", Duration = 4 })
     end
-    val.Value = state
-end
+})
 
-local function LoadToggle(name)
-    local val = player:FindFirstChild(name)
-    if val then
-        return val.Value
+Tabs.Main0:AddButton({
+    Title = "Link Bio",
+    Description = "guns.lol/chuckydz",
+    Callback = function()
+        setclipboard("https://guns.lol/chuckydz")
+        Fluent:Notify({ Title = "Sao chép!", Content = "Đã copy link Bio", Duration = 4 })
     end
-    return false
-end
+})
 
--- Các toggle key
-local toggles = {
-    AutoFarm = "AutoFarmToggle",
-    AutoRaid = "AutoRaidToggle",
-    AutoSea = "AutoSeaToggle",
-    AutoDojo = "AutoDojoToggle",
-    AutoBone = "AutoBoneToggle"
-}
-
--- ============== LOGIC AUTO FARM ==============
-local QuestFolder = workspace:WaitForChild("QuestModels")
-local EnemiesFolder = workspace:WaitForChild("Enemies")
-
-local MobMap = {
-    ["Pirate Quest"] = "Pirate",
-    ["Bandit Quest"] = "Bandit",
-    ["Fishman Quest"] = "Fishman",
-    ["Zombie Quest"] = "Zombie",
-    ["Mink Quest"] = "Mink"
-}
-
-local AutoFarmRunning = false
-
-local function GetCurrentQuest()
-    local success, questName = pcall(function()
-        return Comm:InvokeServer("GetQuest")
+-- MAIN FARM
+local function GetQuestName()
+    local success, quest = pcall(function()
+        return game:GetService("ReplicatedStorage").Remotes.Comm:InvokeServer("GetQuest")
     end)
-    return (success and questName) or ""
+    return success and quest or nil
 end
 
 local function AcceptQuest(questName)
     pcall(function()
-        Comm:InvokeServer("StartQuest", questName, 1)
+        game:GetService("ReplicatedStorage").Remotes.Comm:InvokeServer("StartQuest", questName, 1)
     end)
 end
 
 local function FindTargetMob(questName)
-    local mobName = MobMap[questName]
+    local mobNameMap = {
+        ["Pirate Quest"] = "Pirate",
+        ["Bandit Quest"] = "Bandit",
+        ["Fishman Quest"] = "Fishman",
+        ["Zombie Quest"] = "Zombie",
+        ["Mink Quest"] = "Mink"
+    }
+    local mobName = mobNameMap[questName]
     if not mobName then return nil end
-    for _, mob in pairs(EnemiesFolder:GetChildren()) do
+
+    for _, mob in pairs(workspace.Enemies:GetChildren()) do
         if mob.Name == mobName and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
             return mob
         end
@@ -115,192 +107,193 @@ local function FindTargetMob(questName)
     return nil
 end
 
-local function AutoFarm()
-    if AutoFarmRunning then return end
-    AutoFarmRunning = true
-    while LoadToggle(toggles.AutoFarm) and player.Character and player.Character:FindFirstChild("HumanoidRootPart") do
-        local quest = GetCurrentQuest()
-        if quest == "" then
-            AcceptQuest("Pirate Quest")
-            statusLabel.Text = "Trạng thái: Đã nhận nhiệm vụ Pirate Quest"
-            wait(3)
-        else
-            statusLabel.Text = "Trạng thái: Đang farm "..quest
-            local mob = FindTargetMob(quest)
-            if mob and mob:FindFirstChild("HumanoidRootPart") then
-                TweenToPosition(mob.HumanoidRootPart.Position)
-                pcall(function()
-                    Comm:InvokeServer("Attack", mob.Name)
-                end)
-                wait(0.5)
-            else
-                statusLabel.Text = "Trạng thái: Đang tìm mob..."
-                wait(2)
-            end
-        end
-        RunService.Heartbeat:Wait()
+local function TeleportToPosition(pos)
+    local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        hrp.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0))
     end
-    statusLabel.Text = "Trạng thái: Đã dừng Auto Farm"
-    AutoFarmRunning = false
 end
 
--- ============== LOGIC AUTO RAID ==============
+local AutoFarmRunning = false
+Tabs.Main1:AddToggle("AutoFarm", { Title = "Auto Farm Level", Default = false }, function(state)
+    _G.AutoFarm = state
+    if state and not AutoFarmRunning then
+        AutoFarmRunning = true
+        spawn(function()
+            while _G.AutoFarm do
+                local quest = GetQuestName()
+                if not quest or quest == "" then
+                    AcceptQuest("Pirate Quest")
+                    task.wait(3)
+                else
+                    local mob = FindTargetMob(quest)
+                    if mob and mob:FindFirstChild("HumanoidRootPart") then
+                        TeleportToPosition(mob.HumanoidRootPart.Position)
+                        pcall(function()
+                            game:GetService("ReplicatedStorage").Remotes.Comm:InvokeServer("Attack", mob.Name)
+                        end)
+                    else
+                        -- Không tìm thấy mob, có thể chờ hoặc làm gì đó
+                        task.wait(2)
+                    end
+                end
+                task.wait(0.3)
+            end
+            AutoFarmRunning = false
+        end)
+    end
+end)
+
+
+Tabs.Main1:AddToggle("AutoBoss", { Title = "Auto Farm Boss", Default = false }, function(state)
+    _G.AutoBoss = state
+    while _G.AutoBoss and task.wait(1) do
+        print("Đánh Boss...")
+    end
+end)
+
+Tabs.Main1:AddToggle("AutoMastery", { Title = "Auto Farm Mastery", Default = false }, function(state)
+    _G.AutoMastery = state
+end)
+
+-- CONFIG
+Tabs.Main2:AddDropdown("SelectWeapon", {
+    Title = "Chọn vũ khí",
+    Values = {"Katana", "Dark Blade", "Cursed Dual Katana"},
+    Multi = false,
+    Default = 1
+}, function(selected)
+    _G.SelectedWeapon = selected
+end)
+
+-- FIGHTING STYLE
+Tabs.Main3:AddButton({
+    Title = "Mở khóa Superhuman",
+    Callback = function()
+        print("Đang mở Superhuman...")
+    end
+})
+
+Tabs.Main3:AddButton({
+    Title = "Mở khóa Godhuman",
+    Callback = function()
+        print("Đang mở Godhuman...")
+    end
+})
+
+-- ITEM FARM
+Tabs.Main4:AddToggle("AutoFarmBeli", { Title = "Farm Beli", Default = false }, function(state)
+    _G.AutoBeli = state
+end)
+
+Tabs.Main4:AddToggle("AutoFarmHeart", { Title = "Farm Heart", Default = false }, function(state)
+    _G.AutoHeart = state
+end)
+
+-- SEA EVENT
+Tabs.Main5:AddToggle("AutoSeaBeast", { Title = "Đánh Sea Beast", Default = false }, function(state)
+    _G.AutoSeaBeast = state
+end)
+
+-- RAID
 local AutoRaidRunning = false
 local function BuyChip()
     pcall(function()
-        Comm:InvokeServer("BuyChip")
+        game:GetService("ReplicatedStorage").Remotes.Comm:InvokeServer("BuyChip")
     end)
-    wait(1)
-end
-local function EnterMachine()
-    pcall(function()
-        Comm:InvokeServer("StartRaid")
-    end)
-    wait(1)
-end
-local function AutoRaid()
-    if AutoRaidRunning then return end
-    AutoRaidRunning = true
-    while LoadToggle(toggles.AutoRaid) do
-        statusLabel.Text = "Trạng thái: Đang chuẩn bị Raid"
-        BuyChip()
-        statusLabel.Text = "Trạng thái: Vào máy Raid"
-        EnterMachine()
-        statusLabel.Text = "Trạng thái: Raid đang diễn ra..."
-        wait(60)
-    end
-    statusLabel.Text = "Trạng thái: Đã dừng Auto Raid"
-    AutoRaidRunning = false
+    task.wait(1)
 end
 
--- ============== LOGIC AUTO SEA EVENT ==============
-local AutoSeaRunning = false
-local function JoinSeaEvent()
+local function StartRaid()
     pcall(function()
-        Comm:InvokeServer("JoinSeaEvent")
+        game:GetService("ReplicatedStorage").Remotes.Comm:InvokeServer("StartRaid")
     end)
-    wait(1)
-end
-local function AutoSeaEvent()
-    if AutoSeaRunning then return end
-    AutoSeaRunning = true
-    while LoadToggle(toggles.AutoSea) do
-        statusLabel.Text = "Trạng thái: Đang tìm Sea Event"
-        JoinSeaEvent()
-        wait(30)
-    end
-    statusLabel.Text = "Trạng thái: Đã dừng Auto Sea Event"
-    AutoSeaRunning = false
+    task.wait(1)
 end
 
--- ============== LOGIC AUTO DOJO ==============
-local AutoDojoRunning = false
-local function RunDojo()
-    pcall(function()
-        Comm:InvokeServer("StartDojo")
-    end)
-    wait(1)
-end
-local function AutoDragonDojo()
-    if AutoDojoRunning then return end
-    AutoDojoRunning = true
-    while LoadToggle(toggles.AutoDojo) do
-        statusLabel.Text = "Trạng thái: Đang Auto Dragon Dojo"
-        RunDojo()
-        wait(20)
-    end
-    statusLabel.Text = "Trạng thái: Đã dừng Auto Dragon Dojo"
-    AutoDojoRunning = false
-end
-
--- ============== LOGIC AUTO FARM BONE ==============
-local BoneFolder = workspace:FindFirstChild("BoneIsland")
-local AutoBoneRunning = false
-local function FindBone()
-    if BoneFolder then
-        for _, bone in pairs(BoneFolder:GetChildren()) do
-            if bone:FindFirstChild("Humanoid") and bone.Humanoid.Health > 0 then
-                return bone
+Tabs.Main9:AddToggle("AutoRaid", { Title = "Auto Raid", Default = false }, function(state)
+    _G.AutoRaid = state
+    if state and not AutoRaidRunning then
+        AutoRaidRunning = true
+        spawn(function()
+            while _G.AutoRaid do
+                BuyChip()
+                StartRaid()
+                task.wait(60) -- đợi raid xong
             end
-        end
+            AutoRaidRunning = false
+        end)
     end
-    return nil
-end
-local function AutoFarmBone()
-    if AutoBoneRunning then return end
-    AutoBoneRunning = true
-    while LoadToggle(toggles.AutoBone) do
-        local bone = FindBone()
-        if bone and bone:FindFirstChild("HumanoidRootPart") then
-            statusLabel.Text = "Trạng thái: Đang farm Bone"
-            TweenToPosition(bone.HumanoidRootPart.Position)
-            pcall(function()
-                Comm:InvokeServer("Attack", bone.Name)
-            end)
-            wait(0.5)
-        else
-            statusLabel.Text = "Trạng thái: Đang tìm Bone"
-            wait(3)
-        end
-    end
-    statusLabel.Text = "Trạng thái: Đã dừng Auto Farm Bone"
-    AutoBoneRunning = false
-end
-
--- ============== KẾT NỐI GUI VỚI LOGIC ==============
-
-local function OnToggleChange(name, state)
-    SaveToggle(name, state)
-    if name == toggles.AutoFarm then
-        if state then
-            spawn(AutoFarm)
-        end
-    elseif name == toggles.AutoRaid then
-        if state then
-            spawn(AutoRaid)
-        end
-    elseif name == toggles.AutoSea then
-        if state then
-            spawn(AutoSeaEvent)
-        end
-    elseif name == toggles.AutoDojo then
-        if state then
-            spawn(AutoDragonDojo)
-        end
-    elseif name == toggles.AutoBone then
-        if state then
-            spawn(AutoFarmBone)
-        end
-    end
-end
-
--- Tạo toggle GUI
-
-local autoFarmToggle = Tabs.Main:AddToggle(toggles.AutoFarm, { Title = "Auto Farm", Default = false }, OnToggleChange)
-local autoRaidToggle = Tabs.Main:AddToggle(toggles.AutoRaid, { Title = "Auto Raid", Default = false }, OnToggleChange)
-local autoSeaToggle = Tabs.Main:AddToggle(toggles.AutoSea, { Title = "Auto Sea Event", Default = false }, OnToggleChange)
-local autoDojoToggle = Tabs.Main:AddToggle(toggles.AutoDojo, { Title = "Auto Dragon Dojo", Default = false }, OnToggleChange)
-local autoBoneToggle = Tabs.Main:AddToggle(toggles.AutoBone, { Title = "Auto Farm Bone", Default = false }, OnToggleChange)
-
--- Load trạng thái toggle đã lưu và kích hoạt lại
-local function LoadAllToggles()
-    for key, val in pairs(toggles) do
-        local state = LoadToggle(val)
-        if state then
-            if val == toggles.AutoFarm then autoFarmToggle:Set(state)
-            elseif val == toggles.AutoRaid then autoRaidToggle:Set(state)
-            elseif val == toggles.AutoSea then autoSeaToggle:Set(state)
-            elseif val == toggles.AutoDojo then autoDojoToggle:Set(state)
-            elseif val == toggles.AutoBone then autoBoneToggle:Set(state)
-            end
-            OnToggleChange(val, state)
-        end
-    end
-end
-
-LoadAllToggles()
-
--- Bấm END để ẩn hiện GUI
-Window:BindToClose(function()
-    statusLabel.Text = "Trạng thái: GUI đã tắt"
 end)
+
+
+-- COMBAT / PvP
+Tabs.Main10:AddToggle("KillAura", { Title = "Kill Aura", Default = false }, function(state)
+    _G.KillAura = state
+end)
+
+Tabs.Main10:AddToggle("AutoAim", { Title = "Auto Aim", Default = false }, function(state)
+    _G.AutoAim = state
+end)
+
+-- TELEPORT
+local islandPositions = {
+    ["Starter Island"] = Vector3.new(0, 10, 0),  -- Thay bằng tọa độ thật
+    ["Jungle"] = Vector3.new(1000, 20, 2000),
+    ["Sky Island"] = Vector3.new(3000, 50, 4000),
+    ["Hot & Cold"] = Vector3.new(5000, 10, 6000),
+    ["Haunted Castle"] = Vector3.new(7000, 15, 8000)
+}
+
+Tabs.Main11:AddDropdown("IslandTP", {
+    Title = "Chọn đảo",
+    Values = {"Starter Island", "Jungle", "Sky Island", "Hot & Cold", "Haunted Castle"},
+    Multi = false
+}, function(destination)
+    local pos = islandPositions[destination]
+    if pos then
+        local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.CFrame = CFrame.new(pos)
+            print("Đã dịch chuyển đến:", destination)
+        end
+    else
+        print("Chưa có tọa độ đảo:", destination)
+    end
+end)
+
+-- SHOP
+Tabs.Main13:AddToggle("AutoFruit", { Title = "Auto Mua Trái", Default = false }, function(state)
+    _G.AutoBuyFruit = state
+    if state then
+        spawn(function()
+            while _G.AutoBuyFruit do
+                pcall(function()
+                    game:GetService("ReplicatedStorage").Remotes.Comm:InvokeServer("BuyFruit")
+                end)
+                task.wait(10)
+            end
+        end)
+    end
+end)
+
+-- MISC
+Tabs.Main14:AddButton({
+    Title = "Xóa cây / vật cản",
+    Callback = function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("Model") and v.Name:lower():find("tree") then
+                v:Destroy()
+            end
+        end
+    end
+})
+
+Tabs.Main14:AddButton({
+    Title = "Tắt hiệu ứng màn hình",
+    Callback = function()
+        for _,v in pairs(game:GetService("Lighting"):GetDescendants()) do
+            if v:IsA("PostEffect") then v.Enabled = false end
+        end
+    end
+})
